@@ -55,6 +55,25 @@ Or open `notebooks/quickstart.ipynb` in Colab.
 Then read `docs/TARGET.md` and look at `hindcast/hindcast_snow-analog.md`:
 that is the bar.
 
+## If you work in R
+
+Nothing here requires Python. The label is Parquet and CSV over HTTPS:
+
+```r
+library(arrow); library(dplyr)
+base <- "https://hydrohistorian.com/static/data/releases/call_truth/clear_creek/"
+weekly <- read_parquet(url(paste0(base, "call_truth_weekly.parquet"), "rb"))
+weekly %>% filter(usable) %>% group_by(week_index) %>%
+  summarise(p_le_10000 = mean(!is.na(controlling_admin_combined) & controlling_admin_combined <= 10000))
+```
+
+The contract is a JSON file (`docs/CONTRACT.md`); `jsonlite::write_json`
+produces it, and `ccf validate FILE` (or the GitHub Action on a PR) checks
+it the way the site will. Score with the same rules: Brier score, skill
+`1 - Brier/Brier_ref`, interval by resampling whole seasons. An R
+implementation of the harness would be a welcome first PR in its own
+right (`R/` directory, `scoringRules` or hand-rolled, your call).
+
 ## Where your knowledge matters most (no code needed)
 
 These are open questions the site has published for an expert read. Your
