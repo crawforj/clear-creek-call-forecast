@@ -1,0 +1,38 @@
+# A tag vX.Y.Z builds the forecast file the site ingests and attaches it,
+# the hindcast report and the checksums to a GitHub Release. The site's
+# weekly job reads the LATEST release's assets, read-only. Which model is
+# emitted is set by MODEL below; change it in the same PR that earns it.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  MODEL: snow-analog
+  AUTHORS: "John Crawford, Ryan McClure"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: python -m pytest -q
+      - name: emit the forecast from the live truth table
+        run: |
+          ccf fetch
+          ccf emit --model "$MODEL" --version "${GITHUB_REF_NAME}" --authors "$AUTHORS" --out dist --strict
+      - name: attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" \
+            --notes-file dist/hindcast_report.md \
+            dist/call_forecast_d1_wd7_clear_creek.json dist/hindcast_report.md dist/sha256sums.txt

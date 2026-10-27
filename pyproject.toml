@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clear-creek-call-forecast"
+version = "0.1.0"
+description = "Forecasting the controlling river call on Clear Creek (Colorado Division 1, Water District 7) from hydrohistorian.com's published call truth table"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "John Crawford" }]
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "pyarrow>=14",
+    "requests>=2.28",
+    "jsonschema>=4.18",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+# Gradient boosting for contributed models; the baselines need none of it.
+ml = ["scikit-learn>=1.3", "lightgbm>=4.0"]
+notebook = ["jupyter", "matplotlib"]
+
+[project.scripts]
+ccf = "ccf.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["ccf*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests", "."]

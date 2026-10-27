@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hydrohistorian.com/static/data/call_forecast.schema.json",
+  "title": "Hydrohistorian call forecast (schema 1.0)",
+  "description": "What hydrohistorian.com accepts from an outside call-forecast model. The site owns this file; a forecast repository validates against it in CI. Semantics: per season week, the probability that the controlling admin number on the stream (min over calls on the stream and calls DWR says reach the district) is less than or equal to each band. Week 0 begins April 1. Paper water: a cutline of entitlements, never deliveries.",
+  "type": "object",
+  "required": ["schema_version", "basin", "model", "issued_at", "data_through", "truth_table_sha256", "season_year", "season_start", "horizon_weeks", "bands", "weeks", "skill", "caveats"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {"type": "string", "enum": ["1.0"]},
+    "basin": {"type": "string", "description": "The site's basin slug, e.g. d1_wd7_clear_creek"},
+    "model": {
+      "type": "object",
+      "required": ["name", "version", "repo"],
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "string", "description": "The release tag that produced this file"},
+        "repo": {"type": "string", "description": "owner/name on GitHub"},
+        "git_sha": {"type": ["string", "null"]},
+        "authors": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "issued_at": {"type": "string", "format": "date-time"},
+    "data_through": {"type": "string", "format": "date", "description": "Last day of input data the forecast used"},
+    "truth_table_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of the call_truth_weekly.parquet the model was trained and scored on, from the truth table's manifest.json"},
+    "season_year": {"type": "integer", "minimum": 2000},
+    "season_start": {"type": "string", "format": "date"},
+    "horizon_weeks": {"type": "integer", "minimum": 1, "maximum": 31},
+    "bands": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}, "description": "Must equal the truth table's bands.json exactly"},
+    "weeks": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["week_index", "week_start", "p_controlling_le"],
+        "properties": {
+          "week_index": {"type": "integer", "minimum": 0, "maximum": 30},
+          "week_start": {"type": "string", "format": "date"},
+          "p_controlling_le": {
+            "type": "object",
+            "description": "Keys are the bands as strings; values are probabilities, non-decreasing from the most senior band to the most junior",
+            "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+          },
+          "p_free_river": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "season_min_admin_quantiles": {
+      "type": "object",
+      "properties": {"q10": {"type": "number"}, "q50": {"type": "number"}, "q90": {"type": "number"}}
+    },
+    "skill": {
+      "type": "object",
+      "required": ["method", "n_seasons", "bss_vs_climatology", "bss_vs_persistence", "bootstrap_ci_bss_clim"],
+      "properties": {
+        "method": {"type": "string", "description": "e.g. leave-one-season-out hindcast 2005-2025"},
+        "n_seasons": {"type": "integer", "minimum": 1},
+        "bss_vs_climatology": {"type": "number"},
+        "bss_vs_persistence": {"type": "number"},
+        "brier": {"type": "number"},
+        "reliability": {"type": "number"},
+        "bootstrap_ci_bss_clim": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": ["number", "null"]}}
+      }
+    },
+    "caveats": {"type": "array", "items": {"type": "string"}}
+  }
+}

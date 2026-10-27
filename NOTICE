@@ -1,0 +1,16 @@
+clear-creek-call-forecast
+Copyright 2026 John Crawford
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The analog baseline (ccf/models/analog.py) and the scoring rules
+(ccf/hindcast.py) reproduce the method and the proper-score definitions of
+hydrohistorian.com's curtailment outlook and skill module, which are
+otherwise proprietary. They are released here under Apache-2.0 by their
+author so that any contributed model is scored by the same rules the site
+scores by.
+
+The call truth table and the Division 1 bulk release this code reads are
+published by hydrohistorian.com from public records of the Colorado
+Division of Water Resources. SNOTEL data are from the USDA NRCS Air and
+Water Database (public domain).

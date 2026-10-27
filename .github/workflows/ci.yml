@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: python -m pytest -q
+      # A PR that touches a model must carry its receipt: the hindcast is
+      # re-run here on the live truth table and the verdict printed in the log.
+      - name: hindcast on the live truth table (baselines)
+        continue-on-error: true
+        run: |
+          ccf fetch
+          ccf hindcast --model climatology --n-boot 500 --out hindcast
+          ccf hindcast --model snow-analog --n-boot 500 --out hindcast
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hindcast
+          path: hindcast/
+          if-no-files-found: ignore
