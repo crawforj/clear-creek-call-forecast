@@ -4,7 +4,7 @@ __pycache__/
 venv/
 *.egg-info/
 dist/
-hindcast/
+/hindcast/
 .pytest_cache/
 .ipynb_checkpoints/
 .DS_Store
